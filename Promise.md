@@ -28,12 +28,13 @@ Promise.resolve(1)
   // 1
 ```
 解析：  
-.then 或者 .catch 的参数期望是函数，传入非函数则会发生**值穿透**。原理上是当then中传入的不算函数，则这个`promise`返回上一个`promise`的值，这就是发生值穿透的原因.
-
----
-.then 的第二个处理错误的函数捕获不了第一个处理成功的函数抛出的错误，而后续的 .catch 可以捕获之前的错误
-
-
+.then 或者 .catch 的参数期望是函数，非函数 onFulfilled → 采用默认回调：`value => value`，整体等价：
+```js
+Promise.resolve(1)
+  .then(value => value)   // 传递 1
+  .then(value => value)   // 仍然是 1
+  .then(console.log)      // 打印 1
+```
 ---
 ```js
 async function getResult() {
@@ -89,15 +90,11 @@ let myLight = (timer, cb) => {
 
 
 let myStep = () => {
-  Promise.resolve().then(() => {
-    return myLight(3000, red);
-  }).then(() => {
-    return myLight(2000, green);
-  }).then(()=>{
-    return myLight(1000, yellow);
-  }).then(()=>{
-    myStep();
-  })
+  Promise.resolve()
+	  .then(() => myLight(3000, red))
+	  .then(() => myLight(2000, green))
+	  .then(() => myLight(1000, yellow))
+	  .then(() => myStep())
 };
 myStep();
 ```
@@ -118,7 +115,7 @@ let v = new Promise(resolve => {
 new Promise(resolve => {
   resolve(v);
 }).then((v)=>{
-    console.log(v)
+  console.log(v)
 });
 // begin->1->2->3->then->4 可以发现then推迟了两个时序
 // 推迟原因：
@@ -133,8 +130,7 @@ Promise.resolve(v).then((v)=>{
   console.log(v)
 });
 // begin->1->then->2->3->4 可以发现then的执行时间正常了，第一个执行的微任务就是下面这个.then
-// 原因：Promise.resolve()API如果参数是promise会直接返回这个promise实例，不会做任何处理
-
+// 原因：Promise.resolve()如果参数是promise会直接返回这个promise实例，不会做任何处理
 
 new Promise(resolve => {
   console.log(1);
@@ -152,7 +148,6 @@ new Promise(resolve => {
 ```
 
 手写promise的简单实现
-
 ```js
 const PENDING = 'pending';
 const FULFILLED = 'fulfilled';
@@ -161,18 +156,18 @@ const REJECTED = 'rejected';
 class myPromise {
   constructor(executor) {
     this.status = PENDING;
-    this.value = '';
-    this.reason = '';
+    this.value = undefined;
+    this.reason = undefined;
     this.onFullfilledCallback = [];
     this.onRejectedCallback = [];
-    function resolve(value) {
+    const resolve = (value) => {
       if(this.status === PENDING) {
         this.status = FULFILLED;
         this.value = value;
         this.onFullfilledCallback.forEach(item => item(value));
       }
     }
-    function reject(reason) {
+    const reject = (reason) => {
       if(this.status === PENDING) {
         this.status = REJECTED;
         this.reason = reason;
@@ -182,7 +177,7 @@ class myPromise {
     try {
       executor(resolve, reject);
     } catch(e) {
-      this.reject(e);
+      reject(e);
     }
   }
   static resolve(value) {
@@ -232,6 +227,7 @@ class myPromise {
   }
 }
 ```
+
 ```js
 Promise.prototype.all = function(arr) {
   return new Promise((resolve, reject) => {
@@ -242,38 +238,35 @@ Promise.prototype.all = function(arr) {
       return resolve(result);
     }
     for(let i = 0; i < len; i++) {
-      Promise.resolve(arr[i]).then(res => {
-        result[i] = res;
-        count++;
-        if(count === len) {
-          resolve(result);
-        }
-      }, reason => {
-        reject(reason);
-      });
+      Promise.resolve(arr[i])
+	    .then(res => {
+          result[i] = res;
+          count++;
+          if (count === len) {
+            resolve(result);
+          }
+        })
+        .catch(reason => reject(reason));
     }
   })
 }
 ```
-
 
 ```js
 Promise.prototype.race = function(arr) {
   return new Promise((resolve, reject) => {
-    if(arr.length === 0) {
-      return resolve()
+    if (typeof arr[Symbol.iterator] !== 'function') {
+      return reject(new Error(''对象不可迭代''));
     }
-    arr.forEach(item => {
-      Promise.resolve(item).then(res => {
-        resolve(res);
-      }, reason => {
-        reject(reason);
-      })
-    })
+    if (arr.length === 0) {
+      return; // 数据为空，Promise 永远 pending
+    }
+    for (let item of arr) {
+	  Promise.resolve(item).then(resolve, reject);
+    }
   })
 }
 ```
-
 
 ```js
 Promise.prototype.allSettled = function(arr) {
@@ -285,7 +278,8 @@ Promise.prototype.allSettled = function(arr) {
       return resolve(result);
     }
     for(let i = 0; i < len; i++) {
-      Promise.resolve(arr[i]).then(res => {
+      Promise.resolve(arr[i])
+      .then(res => {
         count++;
         result[i] = {
           status: 'fulfilled',
@@ -294,7 +288,8 @@ Promise.prototype.allSettled = function(arr) {
         if(count === len) {
           resolve(result);
         }
-      }, reason => {
+      })
+      .catch(reason => {
         count++;
         result[i] = {
           status: 'rejected',
@@ -309,23 +304,37 @@ Promise.prototype.allSettled = function(arr) {
 }
 ```
 
-
 ```js
 Promise.prototype.finally = function(fn) {
-  //
   return this.then(
     value => Promise.resolve(fn()).then(() => value),
-    reason => Promise.resolve(fn()).then(() => { throw reason })
-  )
-  //
-  return this.then(val => {
-    return Promise.resolve(fn()).then(() => {
-      return val;
-    });
-  }, reason => {
-    return Promise.resolve(fn()).then(() => {
-      throw reason;
-    });
-  });
+    reason => Promise.resolve(fn()).then(() => Promise.reject(reason))
+  );
+}
+```
+
+```js
+Promise.prototype.any = (arr) => {
+	return new Promise((resolve, reject) => {
+		let errors = [];
+		let count = 0;
+		let len = arr.length;
+		if (len === 0) {
+			return reject([]);
+		}
+		for (let i = 0; i < len; i++) {
+			Promise.resolve(arr[i])
+			.then(res => {
+				resolve(res);
+			})
+			.catch(reason => {
+				count++;
+				errors[i] = reason;
+				if (count === len) {
+					reject(errors);
+				}
+			})
+		}
+	})
 }
 ```

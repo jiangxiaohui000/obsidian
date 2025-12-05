@@ -1,6 +1,3 @@
-## Vue.use()原理
-- [谈谈Vue.use的原理](https://juejin.cn/post/6859944479223185416)
-- [Vue.use的工作原理（流程及部分源码）](https://www.shouxicto.com/article/46.html)
 ## vue3编译阶段性能优化：
 - diff算法优化：静态标记
 
@@ -90,7 +87,50 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
 4. 使用 shallowRef()，shallowReactive()绕开超大型数组的深度响应
 5. 避免不必要的组件抽象：组件实例比普通 DOM 节点要昂贵得多，而且为了逻辑抽象创建太多组件实例将会导致性能损失。考虑这种优化的最佳场景还是在大型列表中。想象一下一个有 100 项的列表，每项的组件都包含许多子组件。在这里去掉一个不必要的组件抽象，可能会减少数百个组件实例的无谓性能消耗。
 ## vue3 依赖收集
+```js
+const targetMap = new WeakMap();
+let activityEffect = null;
+function track(target, key) {
+	if (!activityEffect) return;
+	let depsMap = targetMap.get(target);
+	if (!depsMap) {
+		depsMap = new Map();
+		targetMap.set(target, depsMap);
+	}
+	let dep = depsMap.get(key);
+	if (!dep) {
+		dep = new Set();
+		depsMap.set(key, dep);
+	}
+	dep.add(activityEffect);
+}
+function trigger(target, key) {
+	const depsMap = targetMap.get(target);
+	if (!depsMap) return;
+	const dep = depsMap.get(key);
+	if (!dep) return;
+	dep.forEach(effect => effect())
+}
 
+targetMap = WeakMap(target, Map(key, Set(effect)))
+```
+
+```js
+function reactive(target) {
+	return new Proxy(target, {
+		get(target, key, receiver) {
+			const result = Reflect.get(target, key, receiver);
+			track(target, key);
+			return result;
+		},
+		set(target, key, value, receiver) {
+			const result = Reflect.set(target, key, value, receiver);
+			trigger(target, key);
+			return result;
+		}
+	})
+}
+```
 ![截屏2023-05-14 10.41.12.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/036d44b6edb54b25902988dc5723685e~tplv-k3u1fbpfcp-watermark.image?)
 
 ![截屏2023-05-14 10.49.09.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fb9bd7481f9648a89ae7780d0bbd9a3a~tplv-k3u1fbpfcp-watermark.image?)
