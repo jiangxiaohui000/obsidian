@@ -4,151 +4,24 @@
     "type": "split",
     "children": [
       {
-        "id": "92286d850b66f46a",
+        "id": "fe0dc73e43756fd3",
         "type": "tabs",
         "children": [
           {
-            "id": "cddc1f5e9be07a77",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "手写.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "手写"
-            }
-          },
-          {
-            "id": "d5a48f4ce95200a7",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "TS内置类型.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "TS内置类型"
-            }
-          },
-          {
-            "id": "508e4d16bfaa2c65",
+            "id": "44b30017aa352113",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
                 "file": "性能优化.md",
-                "mode": "source",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
               "title": "性能优化"
             }
-          },
-          {
-            "id": "0a44408c304093d8",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Vue3.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Vue3"
-            }
-          },
-          {
-            "id": "5931f1c5658e3740",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Vue3.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Vue3"
-            }
-          },
-          {
-            "id": "9ecbe43d929891f0",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "变量提升.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "变量提升"
-            }
-          },
-          {
-            "id": "02cb0ef9b35ae069",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "JS继承.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "JS继承"
-            }
-          },
-          {
-            "id": "d4e05dc1c34a1c3d",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "async await.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "async await"
-            }
-          },
-          {
-            "id": "59a43bf0ba9ba9ad",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "jsbridge.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "jsbridge"
-            }
-          },
-          {
-            "id": "321e9e236e840b80",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "手写.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "手写"
-            }
           }
-        ],
-        "currentTab": 9
+        ]
       }
     ],
     "direction": "vertical"
@@ -221,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "手写.md",
+                "file": "Vue3.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -231,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "手写 的反向链接列表"
+              "title": "Vue3 的反向链接列表"
             }
           },
           {
@@ -240,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "手写.md",
+                "file": "Vue3.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "手写 的出链列表"
+              "title": "Vue3 的出链列表"
             }
           },
           {
@@ -283,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "手写.md",
+                "file": "Vue3.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "手写 的大纲"
+              "title": "Vue3 的大纲"
             }
           }
         ]
@@ -310,18 +183,18 @@
       "bases:创建新数据库": false
     }
   },
-  "active": "5ccc6a3e4f423c22",
+  "active": "44b30017aa352113",
   "lastOpenFiles": [
-    "性能优化.md",
-    "JS继承.md",
-    "jsbridge.md",
-    "webpack优化.md",
+    "Promise.md",
+    "手写.md",
     "TS内置类型.md",
     "Vue3.md",
     "变量提升.md",
+    "webpack优化.md",
+    "jsbridge.md",
+    "JS继承.md",
+    "性能优化.md",
     "async await.md",
-    "Promise.md",
-    "手写.md",
     "记录.md",
     "欢迎.md"
   ]

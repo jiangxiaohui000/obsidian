@@ -59,7 +59,7 @@ const hzferProp: HZFEMemberProps = "age"; // Type '"age"' is not assignable to t
 ```ts
 type Exclude<T, U> = T extends U ? never : T;
 ```
-**`Extract<UnionType, ExcludedMembers>`**
+**`Extract<UnionType, ExtractMembers>`**
 - 从联合类型中保留（包含）指定成员。
 ```ts
 /**
