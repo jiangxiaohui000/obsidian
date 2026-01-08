@@ -28,11 +28,13 @@ cacheId 是“命名空间”，cacheName 是“具体容器名”。
 决定 **“新版 Service Worker 下载完成后，是否立即上位接管页面”**。
 `skipWaiting` 是为了打破更新机制中的“等待”僵局。
 `skipWaiting` 是新旧逻辑更替的“缓冲带”，设为 `false` 是为了安全，通过手动触发它是为了体验。
-设置为**true：
+
+设置为true：
 - **作用**：一旦新版 SW 安装完成，它会立即强制杀掉旧版 SW，接管当前页面。
 - **优点**：更新速度最快，用户下次刷新（甚至不刷新）就能用上新逻辑。
 - **风险**：**非常危险！** 如果你的新版 SW 修改了拦截逻辑或删除了某些缓存，而用户还在操作旧页面，可能会导致页面请求报错、白屏或逻辑崩溃。
-设置为**false：
+
+设置为false：
 - **作用**：新版 SW 安装后会乖乖待在后台（Waiting 状态），直到旧版 SW 随页面关闭而退出。
 - **优点**：最安全。保证了“旧代码配旧 SW，新代码配新 SW”，不会起冲突。
 - **缺点**：更新缓慢。如果用户不关浏览器，可能永远用不到新版逻辑。
@@ -106,6 +108,22 @@ module.exports = {
 }
 ```
 
+项目中新建 `src/registerSW.js`
+```js
+export function register() {
+  if (!('serviceWorker' in navigator)) return;
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      listenForUpdates(registration);
+      listenForMessages();
+    } catch (e) {
+      console.error('SW registration failed:', e);
+    }
+  });
+}
+```
+
 项目入口文件 src/index.js
 ```js
 import React from 'react'; 
@@ -118,24 +136,6 @@ createRoot(document.getElementById('root')).render(<App />);
 // 仅生产环境注册 SW 
 if (process.env.NODE_ENV === 'production') { 
 	register(); 
-}
-```
-
-项目中新建 `src/registerSW.js`
-```js
-export function register() {
-  if (!('serviceWorker' in navigator)) return;
-  window.addEventListener('load', async () => {
-    try {
-      const registration = await navigator.serviceWorker.register(
-        '/service-worker.js'
-      );
-      listenForUpdates(registration);
-      listenForMessages();
-    } catch (e) {
-      console.error('SW registration failed:', e);
-    }
-  });
 }
 ```
 
@@ -177,7 +177,9 @@ function notifyUpdateAvailable() {
     window.location.reload();
   }
 }
+```
 
+```js
 function notifyDataUpdated() {
   const confirmed = window.confirm(
     '数据已更新，是否刷新页面获取最新内容？'
@@ -187,7 +189,6 @@ function notifyDataUpdated() {
   }
 }
 ```
-
 整个事件流：
 用户打开页面
 ↓
