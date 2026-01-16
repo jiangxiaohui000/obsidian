@@ -20,7 +20,7 @@ export default defineConfig({
 	// 因为 webpack 启动时会根据 node 环境将代码中的 `process` 变量会将值给替换，而 vite 未替换该变量，所以在浏览器环境下会报错。
 	define: { 
 		'process.env': { 
-			NODE_ENV: JSON.stringify(process.env.NODE_ENV), // `import.meta.env` 是一个对象，不能直接赋值给 `NODE_ENV`
+			NODE_ENV: JSON.stringify(process.env.NODE_ENV) || 'production',
 			// 可以加更多...
 		} 
 	}

@@ -1,5 +1,4 @@
 ```js
-// BuildSizeReportPlugin.js
 class AssetsSizeReportPlugin {
   constructor(options = {}) {
     this.maxSize = options.maxSize || 200 * 1024 // 默认 200KB
@@ -78,3 +77,73 @@ module.exports = AssetsSizeReportPlugin
 
 `chunk.files` 是什么？
 一个 chunk 最终会生成哪些物理文件（JS / CSS）
+
+```js
+const path = require('path');
+const fs = require('fs');
+
+class LocalImageAuditPlugin {
+  apply(compiler) {
+    compiler.hooks.thisCompilation.tap('LocalImageAuditPlugin', (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: 'LocalImageAuditPlugin',
+          stage: compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT
+        },
+        () => {
+          const imageMap = new Map(); // filename => { size, modules: [] }
+
+          // 1. 找出所有图片 asset
+          for (const asset of compilation.getAssets()) {
+            const name = asset.name;
+
+            if (!/\.(png|jpe?g|gif|svg|webp|avif)$/i.test(name)) continue;
+
+            const size = asset.source.size();
+
+            imageMap.set(name, {
+              name,
+              size,
+              modules: []
+            });
+          }
+
+          // 2. 反向追踪：这张图是被哪个 module 引用的
+          for (const module of compilation.modules) {
+            if (!module.buildInfo || !module.buildInfo.assets) continue;
+
+            for (const assetName of Object.keys(module.buildInfo.assets)) {
+              if (imageMap.has(assetName)) {
+                imageMap.get(assetName).modules.push(module.resource || 'unknown');
+              }
+            }
+          }
+
+          // 3. 转成数组并排序
+          const rows = [...imageMap.values()]
+            .sort((a, b) => a.size - b.size)
+            .map(img => ({
+              name: img.name,
+              sizeKB: (img.size / 1024).toFixed(2),
+              usedBy: img.modules.join(' | ')
+            }));
+
+          // 4. 导出 CSV
+          const csv = [
+            'Image,Size(KB),Used By',
+            ...rows.map(r =>
+              `"${r.name}","${r.sizeKB}","${r.usedBy}"`
+            )
+          ].join('\n');
+
+          const outputPath = path.join(compiler.options.output.path, 'image-report.csv');
+
+          fs.writeFileSync(outputPath, csv, 'utf-8');
+        }
+      );
+    });
+  }
+}
+
+module.exports = LocalImageAuditPlugin;
+```

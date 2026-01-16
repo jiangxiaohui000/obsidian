@@ -1,5 +1,4 @@
 项目中的使用场景：缓存API接口数据，例如城市接口数据，配置项接口数据。
-流量广告这个项目，使用Service Worker使得页面二次打开的白屏时间减少50%，弱网环境下可以达到80%。
 
 使用**WorkBox**  webpack插件。
 
@@ -12,6 +11,10 @@ Workbox 提供了两种模式：
 ```js
 npm install workbox-webpack-plugin --save-dev
 ```
+#### 更新机制：
+- **安装 (Installing)**：浏览器发现服务器上的 `service-worker.js` 变了，下载并安装新版本。
+- **等待 (Waiting)**：新版本安装好了，但它**不能立即生效**。因为此时旧版本正在控制着当前页面，如果新版本突然接管，可能会导致页面逻辑冲突（比如旧页面去请求新 SW 里已经不存在的资源）。
+- **激活 (Activated)**：只有当用户**关闭所有标签页**并重新打开，旧 SW 彻底死亡后，新 SW 才会上位。
 
 属性讲解：
 ###### cacheId VS cacheName：
@@ -61,11 +64,6 @@ maxEntries控制“数量上限”，控的是“最多能存多少”，不是�
 在固定接口场景下：
 - **`maxAgeSeconds` 才是主控**
 - `maxEntries` 基本只是安全兜底
-
-#### 更新机制：
-- **安装 (Installing)**：浏览器发现服务器上的 `service-worker.js` 变了，下载并安装新版本。
-- **等待 (Waiting)**：新版本安装好了，但它**不能立即生效**。因为此时旧版本正在控制着当前页面，如果新版本突然接管，可能会导致页面逻辑冲突（比如旧页面去请求新 SW 里已经不存在的资源）。
-- **激活 (Activated)**：只有当用户**关闭所有标签页**并重新打开，旧 SW 彻底死亡后，新 SW 才会上位。
 
 ```js
 // webpack.config.js
@@ -257,3 +255,12 @@ server {
 - **千万不要**把 `service-worker.js` 放在 CDN 域名下注册。
 - **必须**把 `service-worker.js` 放在你**主域名的服务器**上（和 `index.html` 在一起）。
 - **原因**：Service Worker 默认不能跨域工作。如果它在 CDN 上，它就无法拦截主域名的 API 请求。
+
+
+如果后端接口数据没有更新，Service Worker (SW) 和浏览器会通过一套成熟的机制来确保“零浪费”。
+1，网络层面：利用 ETag 或 Last-Modified (304 状态码)
+- SW 发起后台请求时，会自动带上缓存中的 **ETag**（内容的哈希值）或 **If-Modified-Since**（上次修改时间）。
+- 服务器比对发现数据没变，直接返回 **HTTP 304 Not Modified**。
+- 结果：网络传输只消耗了极小的 Header 流量，Body 内容为零。这是最极致的性能优化。
+2，如果你没有使用 ETag，或者服务器直接返回了全量数据（200 OK），但内容确实没变：
+- 常规操作：Service Worker 的逻辑通常是“暴力更新”，即拿到新响应后直接调用 `cache.put()`。

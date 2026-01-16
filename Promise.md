@@ -307,8 +307,8 @@ Promise.prototype.allSettled = function(arr) {
 ```js
 Promise.prototype.finally = function(fn) {
   return this.then(
-    value => Promise.resolve(fn()).then(() => value),
-    reason => Promise.resolve(fn()).then(() => Promise.reject(reason))
+    value => Promise.resolve().then(fn()).then(() => value),
+    reason => Promise.resolve().then(fn()).then(() => throw reason)
   );
 }
 ```
